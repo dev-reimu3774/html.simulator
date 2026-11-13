@@ -1,0 +1,2218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>コーディングパーク | 楽しく学べるWeb制作プレイグラウンド</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: M PLUS Rounded 1c (親しみやすい丸ゴシック) & Fira Code (コード用) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"M PLUS Rounded 1c"', 'sans-serif'],
+                        mono: ['"Fira Code"', 'monospace'],
+                    },
+                    colors: {
+                        pastel: {
+                            bg: '#F8FAFC',
+                            card: '#FFFFFF',
+                            pink: '#FF8BA7',
+                            pinkLight: '#FFE4EC',
+                            blue: '#60A5FA',
+                            blueLight: '#DBEAFE',
+                            yellow: '#FBBF24',
+                            yellowLight: '#FEF3C7',
+                            mint: '#34D399',
+                            mintLight: '#D1FAE5',
+                            purple: '#A78BFA',
+                            purpleLight: '#EDE9FE',
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 25px -5px rgba(148, 163, 184, 0.15), 0 8px 10px -6px rgba(148, 163, 184, 0.1)',
+                        'soft-sm': '0 4px 12px rgba(148, 163, 184, 0.12)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background-color: #F4F7FB;
+            color: #334155;
+        }
+        /* カスタムスクロールバー */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+        /* コードエディタのスタイル */
+        .code-textarea {
+            font-family: 'Fira Code', monospace;
+            tab-size: 2;
+            line-height: 1.6;
+            resize: none;
+        }
+        /* ふわふわ浮くアニメーション */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-4px); }
+        }
+        .animate-float {
+            animation: floatSlow 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col overflow-x-hidden">
+
+    <!-- トースト通知（alertの代わり） -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- ヘッダーナビゲーション -->
+    <header class="bg-white/90 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100 shadow-soft-sm px-4 py-3 sm:px-6">
+        <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-3">
+            <!-- ロゴ -->
+            <div class="flex items-center gap-3">
+                <button id="mobile-menu-btn" class="lg:hidden p-2.5 rounded-2xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-pastel-blue to-pastel-purple flex items-center justify-center text-white text-xl shadow-md animate-float">
+                    <i class="fa-solid fa-code"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-slate-800 flex items-center gap-2">
+                        コーディングパーク
+                        <span class="hidden sm:inline-block text-xs font-bold px-2.5 py-0.5 rounded-full bg-pastel-mintLight text-emerald-700">入門プレイグラウンド</span>
+                    </h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">HTML・CSS・JavaScriptをさわって楽しく覚えよう！</p>
+                </div>
+            </div>
+
+            <!-- 進捗トラッカー & アクションボタン -->
+            <div class="flex items-center gap-3 sm:gap-5">
+                <!-- 進捗バー -->
+                <div class="bg-slate-50 border border-slate-200/80 rounded-2xl px-3.5 py-2 flex items-center gap-3 shadow-inner">
+                    <div class="text-xs font-bold text-slate-600 hidden md:block">
+                        <i class="fa-solid fa-trophy text-amber-400 mr-1"></i>学習の進み具合
+                    </div>
+                    <div class="w-24 sm:w-32 h-3 bg-slate-200 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-gradient-to-r from-pastel-mint to-pastel-blue rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <span id="progress-text" class="text-xs font-extrabold text-slate-700">0/9</span>
+                </div>
+
+                <!-- 保存した作品ボタン -->
+                <button onclick="openSavedWorksModal()" class="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-pastel-purpleLight hover:bg-purple-200/80 text-purple-700 font-bold text-sm transition transform active:scale-95">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span class="hidden md:inline">保存した作品</span>
+                </button>
+
+                <!-- テンプレートギャラリーボタン -->
+                <button onclick="openTemplateModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-pastel-pink to-rose-400 hover:opacity-95 text-white font-bold text-sm shadow-md hover:shadow-lg transform active:scale-95 transition">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span class="hidden sm:inline">テンプレート集</span>
+                </button>
+
+                <!-- ログイン / ユーザーアカウントボタン -->
+                <div id="auth-header-area">
+                    <button onclick="openAuthModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm shadow-sm transition transform active:scale-95">
+                        <i class="fa-solid fa-user-astronaut"></i>
+                        <span>ログイン / 新規登録</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツエリア -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
+
+        <!-- 左カラム：カリキュラム一覧 ＆ レッスン解説 -->
+        <section id="sidebar-panel" class="lg:col-span-4 xl:col-span-4 flex flex-col gap-4">
+            
+            <!-- レッスン選択カード -->
+            <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-soft border border-slate-100">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="font-extrabold text-slate-800 flex items-center gap-2 text-base">
+                        <span class="w-7 h-7 rounded-xl bg-pastel-blueLight text-blue-600 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-book-open"></i>
+                        </span>
+                        レッスンをえらぶ
+                    </h2>
+                    <!-- カテゴリーフィルター -->
+                    <div class="flex gap-1 bg-slate-100 p-1 rounded-2xl text-xs font-bold">
+                        <button onclick="filterLessons('all')" id="cat-all" class="cat-btn px-2.5 py-1 rounded-xl bg-white text-slate-800 shadow-sm transition">すべて</button>
+                        <button onclick="filterLessons('html')" id="cat-html" class="cat-btn px-2.5 py-1 rounded-xl text-slate-500 hover:text-slate-800 transition">HTML</button>
+                        <button onclick="filterLessons('css')" id="cat-css" class="cat-btn px-2.5 py-1 rounded-xl text-slate-500 hover:text-slate-800 transition">CSS</button>
+                        <button onclick="filterLessons('js')" id="cat-js" class="cat-btn px-2.5 py-1 rounded-xl text-slate-500 hover:text-slate-800 transition">JS</button>
+                    </div>
+                </div>
+
+                <!-- レッスンリスト -->
+                <div id="lesson-list" class="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:max-h-48 lg:overflow-y-auto pr-1">
+                    <!-- JSで動的に生成 -->
+                </div>
+            </div>
+
+            <!-- 選択中レッスンの解説カード -->
+            <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-soft border border-slate-100 flex-1 flex flex-col justify-between">
+                <div>
+                    <!-- バッジとタイトル -->
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <span id="lesson-badge" class="px-3 py-1 rounded-full text-xs font-extrabold bg-orange-100 text-orange-600">
+                            HTML基礎
+                        </span>
+                        <button id="complete-toggle-btn" onclick="toggleLessonComplete()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border-2 border-slate-200 text-slate-500 hover:border-emerald-400 hover:text-emerald-600 transition">
+                            <i class="fa-regular fa-circle-check text-sm"></i>
+                            <span>完了にする</span>
+                        </button>
+                    </div>
+
+                    <h3 id="lesson-title" class="text-xl font-extrabold text-slate-800 mb-3">
+                        1. 見出しと段落を作ろう
+                    </h3>
+
+                    <!-- わかりやすい解説 -->
+                    <div id="lesson-desc" class="text-sm text-slate-600 leading-relaxed space-y-2.5 mb-4">
+                        <!-- JSで挿入 -->
+                    </div>
+
+                    <!-- ポイントボックス -->
+                    <div class="bg-pastel-blueLight/50 border border-blue-100 rounded-2xl p-3.5 mb-4">
+                        <div class="text-xs font-extrabold text-blue-700 flex items-center gap-1.5 mb-1">
+                            <i class="fa-solid fa-lightbulb text-amber-400 text-sm"></i>
+                            ここがポイント！
+                        </div>
+                        <p id="lesson-point" class="text-xs text-slate-700 leading-relaxed">
+                            <!-- JSで挿入 -->
+                        </p>
+                    </div>
+
+                    <!-- 試してみよう（ミニ課題） -->
+                    <div class="bg-pastel-yellowLight/60 border border-amber-200/70 rounded-2xl p-3.5 mb-5">
+                        <div class="text-xs font-extrabold text-amber-800 flex items-center gap-1.5 mb-1">
+                            <i class="fa-solid fa-rocket text-orange-500 text-sm"></i>
+                            チャレンジ！試してみよう
+                        </div>
+                        <p id="lesson-challenge" class="text-xs text-slate-700 leading-relaxed">
+                            <!-- JSで挿入 -->
+                        </p>
+                    </div>
+                </div>
+
+                <!-- お手本を読み込むボタン＆次へボタン -->
+                <div class="flex flex-wrap items-center gap-2.5 pt-3 border-t border-slate-100">
+                    <button onclick="loadLessonCode()" class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-pastel-blue hover:bg-blue-500 text-white font-bold text-sm shadow-sm hover:shadow transition transform active:scale-95">
+                        <i class="fa-solid fa-file-import"></i>
+                        <span>お手本コードをエディタに読む</span>
+                    </button>
+                    <button onclick="nextLesson()" title="次のレッスンへ" class="px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition">
+                        次へ <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 右カラム：コードエディタ ＆ リアルタイムプレビュー -->
+        <section class="lg:col-span-8 xl:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+            
+            <!-- コードエディタカード -->
+            <div class="bg-white rounded-3xl shadow-soft border border-slate-100 flex flex-col overflow-hidden min-h-[460px] lg:min-h-[640px]">
+                <!-- エディタヘッダー（言語タブ＆操作ボタン） -->
+                <div class="bg-slate-50/90 border-b border-slate-100 p-3 flex flex-wrap items-center justify-between gap-2">
+                    <!-- HTML / CSS / JS タブ -->
+                    <div class="flex items-center gap-1.5 bg-slate-200/70 p-1 rounded-2xl">
+                        <button onclick="switchEditorTab('html')" id="tab-html" class="editor-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-white text-orange-600 shadow-sm transition">
+                            <i class="fa-brands fa-html5 text-sm"></i> HTML
+                        </button>
+                        <button onclick="switchEditorTab('css')" id="tab-css" class="editor-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-slate-600 hover:text-blue-600 transition">
+                            <i class="fa-brands fa-css3-alt text-sm"></i> CSS
+                        </button>
+                        <button onclick="switchEditorTab('js')" id="tab-js" class="editor-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-slate-600 hover:text-amber-600 transition">
+                            <i class="fa-brands fa-js text-sm"></i> JS
+                        </button>
+                    </div>
+
+                    <!-- ツールボタン（保存・コピー・リセット・実行） -->
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="openSaveCodeModal()" title="今の作品をクラウドに保存" class="px-3 py-1.5 rounded-xl bg-pastel-purpleLight/80 border border-purple-200 hover:bg-purple-200 text-purple-700 text-xs font-extrabold flex items-center gap-1 transition">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <span class="hidden sm:inline">保存</span>
+                        </button>
+                        <button onclick="copyCurrentCode()" title="今のコードをコピー" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold flex items-center gap-1 transition">
+                            <i class="fa-regular fa-copy"></i>
+                            <span class="hidden sm:inline">コピー</span>
+                        </button>
+                        <button onclick="resetCode()" title="初期状態に戻す" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-600 text-xs font-bold flex items-center gap-1 transition">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span class="hidden sm:inline">リセット</span>
+                        </button>
+                        <button onclick="runPreview(true)" class="px-3.5 py-1.5 rounded-xl bg-pastel-mint hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition transform active:scale-95">
+                            <i class="fa-solid fa-play"></i>
+                            <span>実行</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- エディタヒントバー -->
+                <div id="editor-hint-bar" class="bg-orange-50/70 px-4 py-1.5 text-[11px] font-bold text-orange-700 border-b border-orange-100/60 flex items-center justify-between">
+                    <span><i class="fa-solid fa-circle-info mr-1"></i>HTMLはページの骨組み（見出し・文字・ボタンなど）を書きます</span>
+                    <span class="text-slate-400 font-normal">自動反映ON</span>
+                </div>
+
+                <!-- テキストエリア領域 -->
+                <div class="relative flex-1 bg-[#1E293B] text-slate-100">
+                    <textarea id="code-html" spellcheck="false" class="code-textarea w-full h-full p-4 bg-transparent text-sm focus:outline-none text-orange-100" placeholder="ここにHTMLを書こう..."></textarea>
+                    <textarea id="code-css" spellcheck="false" class="code-textarea w-full h-full p-4 bg-transparent text-sm focus:outline-none text-sky-100 hidden" placeholder="ここにCSS（デザインやアニメーション）を書こう..."></textarea>
+                    <textarea id="code-js" spellcheck="false" class="code-textarea w-full h-full p-4 bg-transparent text-sm focus:outline-none text-amber-100 hidden" placeholder="ここにJavaScript（動きや計算）を書こう..."></textarea>
+                </div>
+            </div>
+
+            <!-- リアルタイムプレビューカード -->
+            <div class="bg-white rounded-3xl shadow-soft border border-slate-100 flex flex-col overflow-hidden min-h-[460px] lg:min-h-[640px]">
+                <!-- プレビューヘッダー（ブラウザ風デザイン） -->
+                <div class="bg-slate-50/90 border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="flex gap-1.5">
+                            <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+                            <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                            <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+                        </div>
+                        <span class="ml-2 text-xs font-extrabold text-slate-600 flex items-center gap-1.5">
+                            <i class="fa-solid fa-eye text-pastel-blue"></i> プレビュー画面
+                        </span>
+                    </div>
+                    <span id="preview-status" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                        リアルタイム更新中
+                    </span>
+                </div>
+
+                <!-- プレビュー表示用 iframe -->
+                <div class="flex-1 bg-white relative">
+                    <iframe id="preview-frame" title="プレビュー" class="w-full h-full border-0"></iframe>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- テンプレート集モーダル -->
+    <div id="template-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[88vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+            <!-- モーダルヘッダー -->
+            <div class="px-6 py-4 bg-gradient-to-r from-pastel-pinkLight/60 via-pastel-purpleLight/50 to-pastel-blueLight/60 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-white text-pastel-pink flex items-center justify-center text-lg shadow-sm">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-extrabold text-slate-800">すぐに使えるテンプレート集</h2>
+                        <p class="text-xs text-slate-600">好きなデザインをえらんで、中身を自由に改造してみよう！</p>
+                    </div>
+                </div>
+                <button onclick="closeTemplateModal()" class="w-9 h-9 rounded-full bg-white/80 hover:bg-white text-slate-500 hover:text-slate-800 flex items-center justify-center transition shadow-sm">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- テンプレートカード一覧 -->
+            <div id="template-grid" class="p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- JSで動的に生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ログイン / 新規登録モーダル -->
+    <div id="auth-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 bg-gradient-to-r from-pastel-blueLight/70 to-pastel-purpleLight/70 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-white text-pastel-blue flex items-center justify-center text-lg shadow-sm">
+                        <i class="fa-solid fa-user-astronaut"></i>
+                    </div>
+                    <div>
+                        <h2 id="auth-modal-title" class="text-lg font-extrabold text-slate-800">ログイン</h2>
+                        <p class="text-xs text-slate-600">学習の進み具合や作品を保存しよう！</p>
+                    </div>
+                </div>
+                <button onclick="closeAuthModal()" class="w-9 h-9 rounded-full bg-white/80 hover:bg-white text-slate-500 hover:text-slate-800 flex items-center justify-center transition shadow-sm">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <!-- モード切り替えタブ -->
+                <div class="grid grid-cols-2 bg-slate-100 p-1 rounded-2xl text-xs font-extrabold">
+                    <button id="auth-tab-login" onclick="switchAuthMode('login')" class="py-2 rounded-xl bg-white text-slate-800 shadow-sm transition">ログイン</button>
+                    <button id="auth-tab-signup" onclick="switchAuthMode('signup')" class="py-2 rounded-xl text-slate-500 hover:text-slate-800 transition">新規登録</button>
+                </div>
+
+                <!-- エラー表示ボックス -->
+                <div id="auth-error-box" class="hidden bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold px-3.5 py-2.5 rounded-2xl"></div>
+
+                <!-- フォーム -->
+                <form id="auth-form" onsubmit="handleEmailAuth(event)" class="space-y-3">
+                    <div id="auth-name-field" class="hidden">
+                        <label class="block text-xs font-bold text-slate-600 mb-1">ニックネーム</label>
+                        <input type="text" id="auth-name" placeholder="例：そらたろう" class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-pastel-blue">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">メールアドレス</label>
+                        <input type="email" id="auth-email" required placeholder="example@mail.com" class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-pastel-blue">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">パスワード（6文字以上）</label>
+                        <input type="password" id="auth-password" required minlength="6" placeholder="••••••••" class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-pastel-blue">
+                    </div>
+                    <button type="submit" id="auth-submit-btn" class="w-full py-3 rounded-2xl bg-gradient-to-r from-pastel-blue to-blue-500 hover:opacity-95 text-white font-extrabold text-sm shadow-md transition transform active:scale-95">
+                        ログインする
+                    </button>
+                </form>
+
+                <div class="relative flex py-1 items-center">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink mx-3 text-[11px] font-bold text-slate-400">または</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <!-- Googleログイン & ゲストログイン -->
+                <div class="space-y-2">
+                    <button onclick="handleGoogleLogin()" class="w-full py-2.5 px-4 rounded-2xl bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition">
+                        <i class="fa-brands fa-google text-rose-500 text-sm"></i>
+                        <span>Googleアカウントでつづける</span>
+                    </button>
+                    <button onclick="handleGuestLogin()" class="w-full py-2.5 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200/80 text-slate-600 font-bold text-xs flex items-center justify-center gap-2 transition">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                        <span>登録なしですぐ試す（ゲストモード）</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 作品保存モーダル -->
+    <div id="save-code-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
+            <div class="px-6 py-4 bg-pastel-purpleLight/60 border-b border-slate-100 flex items-center justify-between">
+                <h2 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-purple-600"></i>
+                    マイ作品をクラウドに保存
+                </h2>
+                <button onclick="closeSaveCodeModal()" class="w-8 h-8 rounded-full bg-white text-slate-500 hover:text-slate-800 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    いま書いている HTML・CSS・JavaScript にタイトルをつけて保存できます。いつでも「保存した作品」から呼び出せます！
+                </p>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">作品のタイトル</label>
+                    <input type="text" id="save-work-title" placeholder="例：わたしの自己紹介サイト" class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-purple-400">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button onclick="closeSaveCodeModal()" class="flex-1 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition">キャンセル</button>
+                    <button onclick="saveCurrentWorkToCloud()" class="flex-1 py-2.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs shadow-sm transition">保存する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 保存した作品一覧モーダル -->
+    <div id="saved-works-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-pastel-purpleLight/70 to-pastel-blueLight/70 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-white text-purple-600 flex items-center justify-center text-lg shadow-sm">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-extrabold text-slate-800">保存したマイ作品</h2>
+                        <p id="saved-works-subtitle" class="text-xs text-slate-600">クラウドに保存したあなたの作品一覧</p>
+                    </div>
+                </div>
+                <button onclick="closeSavedWorksModal()" class="w-9 h-9 rounded-full bg-white/80 hover:bg-white text-slate-500 hover:text-slate-800 flex items-center justify-center transition shadow-sm">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div id="saved-works-list" class="p-6 overflow-y-auto space-y-3">
+                <!-- JSで動的に生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import {
+            getAuth,
+            onAuthStateChanged,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            updateProfile,
+            GoogleAuthProvider,
+            signInWithPopup,
+            signInAnonymously,
+            signInWithCustomToken,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import {
+            getFirestore,
+            doc,
+            setDoc,
+            getDoc,
+            collection,
+            addDoc,
+            deleteDoc,
+            onSnapshot
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ==========================================
+        // Firebase 初期化
+        // ==========================================
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'coding-park-default';
+        let firebaseConfig = null;
+        try {
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                firebaseConfig = JSON.parse(__firebase_config);
+            }
+        } catch (e) {
+            console.warn('Firebase設定の読み込みをスキップしました:', e);
+        }
+
+        let auth = null;
+        let db = null;
+        let currentUser = null;
+        let savedWorks = [];
+        let unsubscribeWorks = null;
+        let authMode = 'login';
+
+        if (firebaseConfig) {
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        }
+
+        // ==========================================
+        // 1. カリキュラム（レッスン）データ定義
+        // ==========================================
+        const lessons = [
+            // --- HTML基礎 ---
+            {
+                id: 'html-1',
+                category: 'html',
+                badge: 'HTML基礎 ①',
+                badgeColor: 'bg-orange-100 text-orange-600',
+                title: '見出しと段落を作ろう',
+                desc: `<p>Webページを作るときは、<strong>HTML（エイチティーエムエル）</strong>というタグ（<code>&lt; &gt;</code>で囲んだ命令）を使います。</p>
+                       <p><code>&lt;h1&gt;</code> は一番大きな「見出し」、<code>&lt;p&gt;</code> は普通の文章（段落）を表します。</p>`,
+                point: 'タグは <p> ではじめたら、必ず </p> のようにスラッシュ（/）をつけて閉じます！',
+                challenge: '<h1> の中の文字を自分の名前や好きな言葉に書きかえてみよう！',
+                html: `<div class="card">
+  <h1>こんにちは！ぼくのWebサイト</h1>
+  <p>今日からHTMLの勉強をはじめました。</p>
+  <p>タグを使うと、文字の大きさを変えたり文章を分けたりできます！</p>
+</div>`,
+                css: `body {
+  font-family: sans-serif;
+  background-color: #f0f9ff;
+  padding: 24px;
+}
+.card {
+  background: white;
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+}
+h1 {
+  color: #0284c7;
+  margin-top: 0;
+}`,
+                js: `// 最初のレッスンではJavaScriptはまだ使いません！`
+            },
+            {
+                id: 'html-2',
+                category: 'html',
+                badge: 'HTML基礎 ②',
+                badgeColor: 'bg-orange-100 text-orange-600',
+                title: 'リストとリンク・ボタンを作ろう',
+                desc: `<p>好きなものリストを作るときは <code>&lt;ul&gt;</code> と <code>&lt;li&gt;</code> を使います。</p>
+                       <p>また、クリックできるボタンは <code>&lt;button&gt;</code>、別のページへ移動するリンクは <code>&lt;a&gt;</code> で作れます。</p>`,
+                point: '<ul> は箇条書きのグループ、その中の <li> が1つひとつの項目になります。',
+                challenge: '<li> を1つ増やして、あなたの好きな食べ物やゲームを追加してみよう！',
+                html: `<div class="box">
+  <h2>🌟 わたしの好きなものリスト</h2>
+  <ul>
+    <li>カレーライス 🍛</li>
+    <li>プログラミング 💻</li>
+    <li>ネコの動画を見ること 🐱</li>
+  </ul>
+  <button class="my-btn">いいね！をおす</button>
+</div>`,
+                css: `body {
+  font-family: sans-serif;
+  background: #fffbeb;
+  padding: 24px;
+}
+.box {
+  background: white;
+  padding: 24px;
+  border-radius: 24px;
+  border: 2px solid #fde68a;
+}
+li {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+.my-btn {
+  margin-top: 12px;
+  background: #f59e0b;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}`,
+                js: ``
+            },
+            {
+                id: 'html-3',
+                category: 'html',
+                badge: 'HTML基礎 ③',
+                badgeColor: 'bg-orange-100 text-orange-600',
+                title: '画像とカードレイアウト',
+                desc: `<p><code>&lt;img&gt;</code> タグを使うと、ページに画像やイラストを表示できます。</p>
+                       <p><code>&lt;div&gt;</code> という箱でひとまとめにすると、おしゃれな紹介カードが作れますよ！</p>`,
+                point: '<img> タグには閉じタグ（</img>）がいりません。src="..." に画像の場所を書きます。',
+                challenge: '<h2> や <p> の内容を変えて、オリジナルのキャラクターカードにしてみよう！',
+                html: `<div class="profile-card">
+  <img src="https://placehold.co/120x120/60A5FA/FFFFFF?text=HELLO" alt="アイコン">
+  <h2>そらたろう</h2>
+  <p class="tag">小学6年生 / ゲームクリエイター見習い</p>
+  <p>将来の夢は、みんなが笑顔になるWebアプリを作ることです！</p>
+</div>`,
+                css: `body {
+  font-family: sans-serif;
+  background: #f1f5f9;
+  display: flex;
+  justify-content: center;
+  padding: 30px;
+}
+.profile-card {
+  background: white;
+  width: 280px;
+  padding: 24px;
+  border-radius: 28px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+img {
+  border-radius: 50%;
+  border: 4px solid #dbeafe;
+}
+.tag {
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 4px 12px;
+  border-radius: 99px;
+  display: inline-block;
+}`,
+                js: ``
+            },
+
+            // --- CSS＆アニメーション ---
+            {
+                id: 'css-1',
+                category: 'css',
+                badge: 'CSSデザイン ①',
+                badgeColor: 'bg-blue-100 text-blue-600',
+                title: '色・丸み・影でおしゃれにしよう',
+                desc: `<p><strong>CSS（シーエスエス）</strong>は、HTMLで作ったパーツに色をつけたり、角を丸くしたりする魔法の言葉です。</p>
+                       <p><code>border-radius</code> の数字を大きくすると、どんどん丸くなります！</p>`,
+                point: 'border-radius: 50% にすると、正方形がぴったりな「まんまる（円）」になります。',
+                challenge: 'CSSの background-color や border-radius の数字を変えて、形や色の変化を見てみよう！',
+                html: `<div class="container">
+  <div class="shape circle">まる</div>
+  <div class="shape rounded">かどまる</div>
+  <div class="shape pill">カプセル</div>
+</div>`,
+                css: `body {
+  background: #fdf2f8;
+  font-family: sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 85vh;
+}
+.container {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.shape {
+  width: 110px;
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  box-shadow: 0 10px 20px rgba(244, 114, 182, 0.3);
+}
+.circle {
+  background: #f472b6;
+  border-radius: 50%;
+}
+.rounded {
+  background: #60a5fa;
+  border-radius: 24px;
+}
+.pill {
+  width: 150px;
+  background: #34d399;
+  border-radius: 999px;
+}`,
+                js: ``
+            },
+            {
+                id: 'css-2',
+                category: 'css',
+                badge: 'CSSアニメーション ②',
+                badgeColor: 'bg-blue-100 text-blue-600',
+                title: 'マウスを乗せると動くホバー効果',
+                desc: `<p><code>:hover</code>（ホバー）を使うと、マウスカーソルを乗せたときだけデザインを変えられます。</p>
+                       <p><code>transition: 0.3s;</code> を書いておくと、変化がなめらかになります！</p>`,
+                point: 'transform: scale(1.1) は「1.1倍に大きくする」、rotate(5deg) は「5度かたむける」命令です。',
+                challenge: 'プレビューのボタンにマウスを乗せてみよう！scale(1.2) にするとどうなるかな？',
+                html: `<div class="center">
+  <p>ボタンにマウスを乗せてみてね👇</p>
+  <button class="pop-btn">ぷっくり大きくなる！</button>
+  <button class="spin-btn">ちょっとかたむく！</button>
+</div>`,
+                css: `body {
+  font-family: sans-serif;
+  background: #f8fafc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 85vh;
+  text-align: center;
+}
+button {
+  display: block;
+  width: 240px;
+  margin: 16px auto;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.pop-btn {
+  background: #8b5cf6;
+  box-shadow: 0 6px 0 #6d28d9;
+}
+.pop-btn:hover {
+  transform: scale(1.1) translateY(-3px);
+  background: #a78bfa;
+}
+.spin-btn {
+  background: #ec4899;
+  box-shadow: 0 6px 0 #be185d;
+}
+.spin-btn:hover {
+  transform: rotate(-4deg) scale(1.05);
+}`,
+                js: ``
+            },
+            {
+                id: 'css-3',
+                category: 'css',
+                badge: 'CSSアニメーション ③',
+                badgeColor: 'bg-blue-100 text-blue-600',
+                title: 'ふわふわ浮く・回るアニメーション',
+                desc: `<p><code>@keyframes</code>（キーフレーム）を使うと、マウスを乗せなくてもずっと動き続けるアニメーションが作れます！</p>
+                       <p>「0%のときの形」と「50%のときの形」を決めるだけで、CSSが自動でつないでくれます。</p>`,
+                point: 'animation: 名前 時間 infinite; の「infinite」は「無限にくりかえす」という意味です。',
+                challenge: '2s（2秒）を 0.5s に変えると、動きが超スピードになるよ！試してみよう。',
+                html: `<div class="stage">
+  <div class="item float-box">🎈 ふわふわ</div>
+  <div class="item spin-box">⭐ くるくる</div>
+  <div class="item color-box">🌈 にじいろ</div>
+</div>`,
+                css: `body {
+  font-family: sans-serif;
+  background: #0f172a;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 85vh;
+}
+.stage {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.item {
+  width: 110px;
+  height: 110px;
+  border-radius: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* ふわふわ浮く動き */
+@keyframes fuwafuwa {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+.float-box {
+  background: #38bdf8;
+  animation: fuwafuwa 2s ease-in-out infinite;
+}
+
+/* くるくる回る動き */
+@keyframes kurukuru {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.spin-box {
+  background: #fbbf24;
+  color: #1e293b;
+  animation: kurukuru 3s linear infinite;
+}
+
+/* 色が変わる動き */
+@keyframes rainbow {
+  0% { background: #f472b6; }
+  50% { background: #a78bfa; }
+  100% { background: #f472b6; }
+}
+.color-box {
+  animation: rainbow 2.5s ease infinite;
+}`,
+                js: ``
+            },
+
+            // --- JavaScript入門 ---
+            {
+                id: 'js-1',
+                category: 'js',
+                badge: 'JavaScript入門 ①',
+                badgeColor: 'bg-amber-100 text-amber-700',
+                title: 'ボタンを押して文字を書きかえよう',
+                desc: `<p><strong>JavaScript（ジャバスクリプト）</strong>は、ページに「知能」や「動き」をつけるプログラミング言語です。</p>
+                       <p>ボタンを押したときに、画面の文字や色を自由に書きかえることができます！</p>`,
+                point: 'document.getElementById("名前") で、HTMLの中の特定のパーツをつかまえることができます。',
+                challenge: 'JSタブにある「変身したよ！✨」のメッセージや背景色を好きなものに変えてみよう！',
+                html: `<div class="card">
+  <h2 id="message">ボタンを押してね！</h2>
+  <button onclick="henshin()">へんしんボタン！</button>
+</div>`,
+                css: `body {
+  font-family: sans-serif;
+  background: #ecfdf5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 85vh;
+}
+.card {
+  background: white;
+  padding: 32px;
+  border-radius: 28px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+}
+button {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 99px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}`,
+                js: `function henshin() {
+  // id="message" の要素を見つけて中身を変える
+  const text = document.getElementById("message");
+  text.textContent = "やったー！変身したよ！✨";
+  text.style.color = "#ec4899";
+}`
+            },
+            {
+                id: 'js-2',
+                category: 'js',
+                badge: 'JavaScript入門 ②',
+                badgeColor: 'bg-amber-100 text-amber-700',
+                title: '数字が増えるカウンターを作ろう',
+                desc: `<p>プログラムでは、数字を覚えておく箱のことを<strong>「変数（へんすう）」</strong>と呼びます。</p>
+                       <p><code>let count = 0;</code> で0からスタートして、ボタンを押すたびに <code>count = count + 1</code> で増やしていきます！</p>`,
+                point: '10回以上押したときだけ文字の色を変える、といった「条件分岐（if文）」も使えます。',
+                challenge: '「+1」だけでなく、「+10」増えるスーパーボタンも追加してみよう！',
+                html: `<div class="counter-box">
+  <p>クリックした回数</p>
+  <div id="count-num">0</div>
+  <div class="btns">
+    <button onclick="plusOne()" class="plus">+1 ふやす</button>
+    <button onclick="resetCount()" class="reset">0にもどす</button>
+  </div>
+</div>`,
+                css: `body {
+  font-family: sans-serif;
+  background: #eff6ff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 85vh;
+}
+.counter-box {
+  background: white;
+  padding: 30px;
+  border-radius: 30px;
+  text-align: center;
+  width: 280px;
+  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.12);
+}
+#count-num {
+  font-size: 64px;
+  font-weight: bold;
+  color: #3b82f6;
+  margin: 10px 0 20px;
+}
+button {
+  border: none;
+  padding: 12px 18px;
+  border-radius: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 4px;
+}
+.plus { background: #3b82f6; color: white; }
+.reset { background: #e2e8f0; color: #475569; }`,
+                js: `let count = 0;
+
+function plusOne() {
+  count = count + 1;
+  const numEl = document.getElementById("count-num");
+  numEl.textContent = count;
+  
+  // 10以上になったら色をピンクにする！
+  if (count >= 10) {
+    numEl.style.color = "#ec4899";
+  }
+}
+
+function resetCount() {
+  count = 0;
+  const numEl = document.getElementById("count-num");
+  numEl.textContent = count;
+  numEl.style.color = "#3b82f6";
+}`
+            },
+            {
+                id: 'js-3',
+                category: 'js',
+                badge: 'JavaScript入門 ③',
+                badgeColor: 'bg-amber-100 text-amber-700',
+                title: 'ランダムおみくじミニゲーム',
+                desc: `<p><code>Math.random()</code> を使うと、サイコロのようにランダム（運まかせ）な数字を作れます。</p>
+                       <p>これを使うと、おみくじやじゃんけんゲーム、ガチャガチャが作れるようになります！</p>`,
+                point: '配列（[ "大吉", "中吉", "小吉" ]）からランダムに1つ選ぶのがゲームのコツです。',
+                challenge: 'JSの results の中に「超大吉 🎉」や「ラッキーDAY ✨」を追加してみよう！',
+                html: `<div class="omikuji-card">
+  <h2>⛩️ 今日の運勢おみくじ</h2>
+  <div id="result" class="result-circle">？</div>
+  <button onclick="drawOmikuji()">おみくじをひく！</button>
+</div>`,
+                css: `body {
+  font-family: sans-serif;
+  background: #fff1f2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 85vh;
+}
+.omikuji-card {
+  background: white;
+  padding: 32px;
+  border-radius: 32px;
+  text-align: center;
+  width: 290px;
+  box-shadow: 0 12px 30px rgba(244, 63, 94, 0.15);
+}
+.result-circle {
+  width: 130px;
+  height: 130px;
+  margin: 20px auto;
+  border-radius: 50%;
+  background: #ffe4e6;
+  color: #e11d48;
+  font-size: 32px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s;
+}
+button {
+  background: #f43f5e;
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 99px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}`,
+                js: `function drawOmikuji() {
+  const results = ["大吉 🌟", "中吉 😊", "小吉 🍀", "吉 🎵"];
+  // 0から配列の数までのランダムな整数を作る
+  const randomIndex = Math.floor(Math.random() * results.length);
+  
+  const resultBox = document.getElementById("result");
+  resultBox.textContent = results[randomIndex];
+  
+  // ポンッと弾む動き
+  resultBox.style.transform = "scale(1.15)";
+  setTimeout(() => {
+    resultBox.style.transform = "scale(1)";
+  }, 200);
+}`
+            }
+        ];
+
+        // ==========================================
+        // 2. すぐに使えるテンプレート集データ
+        // ==========================================
+        const templates = [
+            {
+                id: 'tpl-profile',
+                title: '自己紹介プロフィールカード',
+                tag: 'HTML + CSS',
+                icon: 'fa-id-card',
+                color: 'from-pink-400 to-rose-400',
+                desc: 'SNS風の丸みのあるおしゃれな自己紹介カード。好きなことや趣味を書きかえて使おう！',
+                html: `<div class="card">
+  <div class="banner"></div>
+  <img class="avatar" src="https://placehold.co/110x110/FF8BA7/FFFFFF?text=ME" alt="アイコン">
+  <h1>あおい ゆうき</h1>
+  <p class="subtitle">✨ 小学6年生 / イラスト＆コード好き ✨</p>
+  <p class="bio">こんにちは！Webデザインとゲーム作りを勉強中です。休日はよく絵を描いたり、公園でバスケをしています！</p>
+  <div class="tags">
+    <span>🎨 お絵かき</span>
+    <span>🏀 バスケ</span>
+    <span>💻 HTML/CSS</span>
+  </div>
+</div>`,
+                css: `body {
+  font-family: sans-serif;
+  background: #f3f4f6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 90vh;
+  margin: 0;
+}
+.card {
+  background: white;
+  width: 320px;
+  border-radius: 30px;
+  overflow: hidden;
+  text-align: center;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+  padding-bottom: 24px;
+}
+.banner {
+  height: 90px;
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 5px solid white;
+  margin-top: -50px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+h1 {
+  font-size: 22px;
+  margin: 10px 0 4px;
+  color: #1f2937;
+}
+.subtitle {
+  font-size: 12px;
+  color: #ec4899;
+  font-weight: bold;
+  margin: 0 0 14px;
+}
+.bio {
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.6;
+  padding: 0 22px;
+  margin-bottom: 18px;
+}
+.tags {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 0 16px;
+}
+.tags span {
+  background: #fdf2f8;
+  color: #db2777;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 99px;
+}`,
+                js: ``
+            },
+            {
+                id: 'tpl-buttons',
+                title: 'アニメーションボタン集',
+                tag: 'CSSアニメーション',
+                icon: 'fa-wand-sparkles',
+                color: 'from-violet-400 to-purple-500',
+                desc: 'ぷるぷる震える・キラッと光る・ふわっと浮き上がる3種類の楽しいボタンセット！',
+                html: `<div class="wrapper">
+  <h2>✨ 魔法のボタンコレクション ✨</h2>
+  <p>カーソルを乗せたりクリックしてみてね！</p>
+  
+  <button class="btn btn-float">ふわっと浮き上がる</button>
+  <button class="btn btn-shake">ぷるぷる震える！</button>
+  <button class="btn btn-glow">キラッと光るボタン</button>
+</div>`,
+                css: `body {
+  font-family: sans-serif;
+  background: #f5f3ff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 90vh;
+  text-align: center;
+}
+.wrapper {
+  background: white;
+  padding: 32px;
+  border-radius: 32px;
+  box-shadow: 0 12px 30px rgba(139, 92, 246, 0.12);
+}
+h2 { color: #5b21b6; margin-top: 0; }
+p { color: #6b7280; font-size: 14px; margin-bottom: 24px; }
+
+.btn {
+  display: block;
+  width: 250px;
+  margin: 16px auto;
+  padding: 16px;
+  border: none;
+  border-radius: 99px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* 1. 浮き上がる */
+.btn-float {
+  background: #60a5fa;
+  box-shadow: 0 6px 15px rgba(96, 165, 250, 0.4);
+}
+.btn-float:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 20px rgba(96, 165, 250, 0.6);
+}
+
+/* 2. ぷるぷる震える */
+@keyframes purupuru {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+.btn-shake {
+  background: #f472b6;
+}
+.btn-shake:hover {
+  animation: purupuru 0.25s infinite;
+}
+
+/* 3. キラッと光る */
+.btn-glow {
+  background: linear-gradient(45deg, #34d399, #10b981);
+}
+.btn-glow:hover {
+  filter: brightness(1.15);
+  transform: scale(1.06);
+  box-shadow: 0 0 20px #34d399;
+}`,
+                js: ``
+            },
+            {
+                id: 'tpl-app',
+                title: 'クリックカウンター＆おみくじアプリ',
+                tag: 'JavaScript連動',
+                icon: 'fa-gamepad',
+                color: 'from-amber-400 to-orange-400',
+                desc: '連打カウンターと、今日のラッキーカラー＆おみくじが同時に遊べるミニアプリ！',
+                html: `<div class="app">
+  <h2>🎮 ラッキーおみくじ＆連打ゲーム</h2>
+  
+  <div class="box">
+    <div id="fortune-text" class="fortune">ボタンを押して占おう！</div>
+    <button onclick="playGacha()" class="gacha-btn">✨ 運勢＆ラッキーカラーを見る</button>
+  </div>
+
+  <div class="box">
+    <p>10秒チャレンジ連打カウンター！</p>
+    <div id="score" class="score">0</div>
+    <button onclick="addScore()" class="tap-btn">連打タップ！👆</button>
+  </div>
+</div>`,
+                css: `body {
+  font-family: sans-serif;
+  background: #fffbeb;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+.app {
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+}
+h2 { color: #b45309; font-size: 19px; }
+.box {
+  background: white;
+  padding: 20px;
+  border-radius: 26px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.12);
+}
+.fortune {
+  font-size: 18px;
+  font-weight: bold;
+  padding: 16px;
+  border-radius: 18px;
+  background: #fef3c7;
+  color: #92400e;
+  margin-bottom: 12px;
+}
+.score {
+  font-size: 48px;
+  font-weight: bold;
+  color: #f59e0b;
+  margin: 6px 0 12px;
+}
+button {
+  border: none;
+  padding: 12px 22px;
+  border-radius: 99px;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+  color: white;
+  transition: transform 0.1s;
+}
+button:active { transform: scale(0.95); }
+.gacha-btn { background: #f59e0b; }
+.tap-btn { background: #ec4899; width: 100%; font-size: 18px; }`,
+                js: `let taps = 0;
+
+function playGacha() {
+  const unsei = ["超大吉 🌟", "大吉 😄", "中吉 🍀", "吉 🎈"];
+  const colors = [
+    { name: "パステルピンク", code: "#fce7f3" },
+    { name: "スカイブルー", code: "#e0f2fe" },
+    { name: "ミントグリーン", code: "#d1fae5" },
+    { name: "レモンイエロー", code: "#fef9c3" }
+  ];
+  
+  const u = unsei[Math.floor(Math.random() * unsei.length)];
+  const c = colors[Math.floor(Math.random() * colors.length)];
+  
+  const el = document.getElementById("fortune-text");
+  el.textContent = u + " / 色：" + c.name;
+  el.style.background = c.code;
+}
+
+function addScore() {
+  taps++;
+  document.getElementById("score").textContent = taps;
+}`
+            },
+            {
+                id: 'tpl-webpage',
+                title: 'シンプルなミニWebページ',
+                tag: '完成サイト構成',
+                icon: 'fa-window-maximize',
+                color: 'from-emerald-400 to-teal-500',
+                desc: 'ヘッダー・メイン紹介・3つのカード・フッターがそろった本格的なミニWebサイト！',
+                html: `<header>
+  <h1>🌿 わたしの趣味ブログ</h1>
+  <p>好きなこと・おすすめの本を紹介するページ</p>
+</header>
+
+<main>
+  <section class="intro">
+    <h2>ようこそ！</h2>
+    <p>このページはHTMLとCSSで作ったミニWebサイトです。文章や色を自由に書きかえてみよう！</p>
+  </section>
+
+  <div class="grid">
+    <div class="card">
+      <h3>📚 おすすめの本</h3>
+      <p>冒険ファンタジー小説にハマっています。</p>
+    </div>
+    <div class="card">
+      <h3>🎨 お絵かき</h3>
+      <p>タブレットでキャラクターを描いています。</p>
+    </div>
+    <div class="card">
+      <h3>💻 プログラミング</h3>
+      <p>自分だけのゲームを作るのが目標です！</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <p>© 2026 わたしの趣味ブログ</p>
+</footer>`,
+                css: `body {
+  font-family: sans-serif;
+  margin: 0;
+  background: #f0fdf4;
+  color: #1e293b;
+}
+header {
+  background: linear-gradient(135deg, #34d399, #059669);
+  color: white;
+  text-align: center;
+  padding: 28px 16px;
+  border-radius: 0 0 28px 28px;
+}
+header h1 { margin: 0 0 6px; font-size: 24px; }
+header p { margin: 0; font-size: 13px; opacity: 0.9; }
+main {
+  max-width: 680px;
+  margin: 20px auto;
+  padding: 0 16px;
+}
+.intro {
+  background: white;
+  padding: 20px;
+  border-radius: 22px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.card {
+  background: white;
+  padding: 18px;
+  border-radius: 22px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+}
+.card h3 { margin-top: 0; color: #059669; font-size: 16px; }
+.card p { font-size: 13px; line-height: 1.5; margin-bottom: 0; }
+footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 12px;
+  color: #64748b;
+}`,
+                js: ``
+            }
+        ];
+
+        // ==========================================
+        // 3. アプリケーション状態管理 ＆ DOM要素
+        // ==========================================
+        let currentLessonIndex = 0;
+        let currentFilter = 'all';
+        let currentEditorTab = 'html';
+        let completedLessons = [];
+        let activeBaseCode = { html: '', css: '', js: '' };
+        let previewDebounceTimer = null;
+
+        const htmlInput = document.getElementById('code-html');
+        const cssInput = document.getElementById('code-css');
+        const jsInput = document.getElementById('code-js');
+        const previewFrame = document.getElementById('preview-frame');
+
+        // ==========================================
+        // 4. 初期化処理
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', async () => {
+            renderLessonList();
+            renderTemplates();
+            selectLesson(0, true);
+            updateProgressUI();
+
+            // モバイル用サイドバー開閉
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const sidebarPanel = document.getElementById('sidebar-panel');
+            if (mobileMenuBtn && sidebarPanel) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    sidebarPanel.classList.toggle('hidden');
+                });
+            }
+
+            // 認証状態の初期化とリスナー設定
+            if (auth) {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    try {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } catch (err) {
+                        console.error('Custom token sign-in error:', err);
+                    }
+                }
+
+                onAuthStateChanged(auth, async (user) => {
+                    currentUser = user;
+                    updateAuthHeaderUI(user);
+
+                    if (user) {
+                        await loadUserProgressFromCloud(user.uid);
+                        subscribeSavedWorks(user.uid);
+                    } else {
+                        if (unsubscribeWorks) {
+                            unsubscribeWorks();
+                            unsubscribeWorks = null;
+                        }
+                        savedWorks = [];
+                        completedLessons = [];
+                        updateCompleteButtonUI();
+                        updateProgressUI();
+                        renderLessonList();
+                        renderSavedWorksList();
+                    }
+                });
+            }
+
+            // リアルタイム入力イベント（デバウンス付きで快適に更新）
+            [htmlInput, cssInput, jsInput].forEach(el => {
+                el.addEventListener('input', () => {
+                    clearTimeout(previewDebounceTimer);
+                    document.getElementById('preview-status').textContent = '入力中...';
+                    previewDebounceTimer = setTimeout(() => {
+                        runPreview(false);
+                    }, 350);
+                });
+
+                // Tabキーでスペース2つ挿入（コード書きやすさ向上）
+                el.addEventListener('keydown', function(e) {
+                    if (e.key === 'Tab') {
+                        e.preventDefault();
+                        const start = this.selectionStart;
+                        const end = this.selectionEnd;
+                        this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
+                        this.selectionStart = this.selectionEnd = start + 2;
+                    }
+                });
+            });
+        });
+
+        // ==========================================
+        // 5. レッスン一覧描画 ＆ フィルター・選択機能
+        // ==========================================
+        function filterLessons(category) {
+            currentFilter = category;
+            ['all', 'html', 'css', 'js'].forEach(cat => {
+                const btn = document.getElementById(`cat-${cat}`);
+                if (!btn) return;
+                if (cat === category) {
+                    btn.className = 'cat-btn px-2.5 py-1 rounded-xl bg-white text-slate-800 shadow-sm transition';
+                } else {
+                    btn.className = 'cat-btn px-2.5 py-1 rounded-xl text-slate-500 hover:text-slate-800 transition';
+                }
+            });
+            renderLessonList();
+        }
+
+        function renderLessonList() {
+            const listEl = document.getElementById('lesson-list');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+
+            lessons.forEach((lesson, index) => {
+                if (currentFilter !== 'all' && lesson.category !== currentFilter) return;
+
+                const isSelected = index === currentLessonIndex;
+                const isDone = completedLessons.includes(lesson.id);
+
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.onclick = () => selectLesson(index, true);
+                item.className = `flex-shrink-0 lg:flex-shrink text-left px-3.5 py-2.5 rounded-2xl border transition flex items-center justify-between gap-2.5 ${
+                    isSelected
+                        ? 'bg-pastel-blueLight/70 border-pastel-blue text-slate-800 font-extrabold shadow-soft-sm'
+                        : 'bg-slate-50/80 hover:bg-slate-100 border-slate-200/70 text-slate-600 font-bold'
+                }`;
+
+                const catDot = lesson.category === 'html' ? 'bg-orange-400'
+                             : lesson.category === 'css'  ? 'bg-blue-400'
+                             : 'bg-amber-400';
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="w-2.5 h-2.5 rounded-full ${catDot} flex-shrink-0"></span>
+                        <span class="text-xs truncate">${index + 1}. ${escapeHtml(lesson.title)}</span>
+                    </div>
+                    <span class="flex-shrink-0 text-xs ${isDone ? 'text-emerald-500' : 'text-slate-300'}">
+                        <i class="fa-${isDone ? 'solid' : 'regular'} fa-circle-check"></i>
+                    </span>
+                `;
+                listEl.appendChild(item);
+            });
+        }
+
+        function selectLesson(index, autoLoadCode = false) {
+            if (index < 0 || index >= lessons.length) return;
+            currentLessonIndex = index;
+            const lesson = lessons[index];
+
+            const badgeEl = document.getElementById('lesson-badge');
+            badgeEl.textContent = lesson.badge;
+            badgeEl.className = `px-3 py-1 rounded-full text-xs font-extrabold ${lesson.badgeColor}`;
+
+            document.getElementById('lesson-title').textContent = `${index + 1}. ${lesson.title}`;
+            document.getElementById('lesson-desc').innerHTML = lesson.desc;
+            document.getElementById('lesson-point').textContent = lesson.point;
+            document.getElementById('lesson-challenge').textContent = lesson.challenge;
+
+            updateCompleteButtonUI();
+            renderLessonList();
+
+            if (autoLoadCode) {
+                loadLessonCode(false);
+            }
+        }
+
+        function loadLessonCode(notify = true) {
+            const lesson = lessons[currentLessonIndex];
+            if (!lesson) return;
+
+            activeBaseCode = {
+                html: lesson.html || '',
+                css: lesson.css || '',
+                js: lesson.js || ''
+            };
+
+            htmlInput.value = activeBaseCode.html;
+            cssInput.value = activeBaseCode.css;
+            jsInput.value = activeBaseCode.js;
+
+            switchEditorTab(lesson.category === 'js' ? 'js' : lesson.category === 'css' ? 'css' : 'html');
+            runPreview(false);
+
+            if (notify) {
+                showToast(`「${lesson.title}」のお手本コードを読み込みました！`, 'success');
+            }
+        }
+
+        function nextLesson() {
+            const nextIdx = (currentLessonIndex + 1) % lessons.length;
+            selectLesson(nextIdx, true);
+            showToast(`レッスン ${nextIdx + 1} へ進みました！`, 'info');
+        }
+
+        // ==========================================
+        // 6. 進捗トラッカー（Firestore クラウド同期）
+        // ==========================================
+        async function loadUserProgressFromCloud(uid) {
+            if (!db || !uid) return;
+            try {
+                const progressRef = doc(db, 'artifacts', appId, 'users', uid, 'progress', 'lessons');
+                const snap = await getDoc(progressRef);
+                if (snap.exists() && Array.isArray(snap.data().completed)) {
+                    completedLessons = snap.data().completed;
+                } else {
+                    completedLessons = [];
+                }
+                updateCompleteButtonUI();
+                updateProgressUI();
+                renderLessonList();
+            } catch (err) {
+                console.error('進捗の読み込みエラー:', err);
+            }
+        }
+
+        async function saveUserProgressToCloud() {
+            if (!db || !currentUser) return;
+            try {
+                const progressRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'progress', 'lessons');
+                await setDoc(progressRef, {
+                    completed: completedLessons,
+                    updatedAt: Date.now()
+                }, { merge: true });
+            } catch (err) {
+                console.error('進捗の保存エラー:', err);
+                showToast('クラウドへの進捗保存に失敗しました', 'error');
+            }
+        }
+
+        async function toggleLessonComplete() {
+            const lesson = lessons[currentLessonIndex];
+            const idx = completedLessons.indexOf(lesson.id);
+
+            if (idx === -1) {
+                completedLessons.push(lesson.id);
+                showToast(currentUser ? '🎉 レッスン完了！クラウドに記録しました' : '🎉 レッスン完了！（ログインすると記録を保存できます）', 'success');
+            } else {
+                completedLessons.splice(idx, 1);
+                showToast('未完了にもどしました', 'info');
+            }
+
+            updateCompleteButtonUI();
+            updateProgressUI();
+            renderLessonList();
+
+            if (currentUser) {
+                await saveUserProgressToCloud();
+            }
+        }
+
+        function updateCompleteButtonUI() {
+            const lesson = lessons[currentLessonIndex];
+            const isDone = completedLessons.includes(lesson.id);
+            const btn = document.getElementById('complete-toggle-btn');
+
+            if (isDone) {
+                btn.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-pastel-mint text-white shadow-sm transition';
+                btn.innerHTML = '<i class="fa-solid fa-circle-check text-sm"></i><span>完了ずみ！</span>';
+            } else {
+                btn.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold border-2 border-slate-200 text-slate-500 hover:border-emerald-400 hover:text-emerald-600 transition';
+                btn.innerHTML = '<i class="fa-regular fa-circle-check text-sm"></i><span>完了にする</span>';
+            }
+        }
+
+        function updateProgressUI() {
+            const total = lessons.length;
+            const done = completedLessons.length;
+            const percent = Math.round((done / total) * 100);
+
+            document.getElementById('progress-bar').style.width = `${percent}%`;
+            document.getElementById('progress-text').textContent = `${done}/${total}`;
+        }
+
+        // ==========================================
+        // 7. エディタ操作 ＆ プレビュー実行
+        // ==========================================
+        function switchEditorTab(tab) {
+            currentEditorTab = tab;
+
+            // テキストエリア切り替え
+            htmlInput.classList.toggle('hidden', tab !== 'html');
+            cssInput.classList.toggle('hidden', tab !== 'css');
+            jsInput.classList.toggle('hidden', tab !== 'js');
+
+            // タブスタイル更新
+            const tabStyles = {
+                html: 'text-orange-600',
+                css: 'text-blue-600',
+                js: 'text-amber-600'
+            };
+
+            ['html', 'css', 'js'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === tab) {
+                    btn.className = `editor-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-white ${tabStyles[t]} shadow-sm transition`;
+                } else {
+                    btn.className = `editor-tab flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-slate-600 hover:${tabStyles[t]} transition`;
+                }
+            });
+
+            // ヒントバー更新
+            const hintBar = document.getElementById('editor-hint-bar');
+            if (tab === 'html') {
+                hintBar.className = 'bg-orange-50/80 px-4 py-1.5 text-[11px] font-bold text-orange-700 border-b border-orange-100/60 flex items-center justify-between';
+                hintBar.innerHTML = '<span><i class="fa-solid fa-circle-info mr-1"></i>HTML：ページの骨組み（見出し・文字・ボタンなど）を書きます</span><span class="text-slate-400 font-normal">自動反映ON</span>';
+            } else if (tab === 'css') {
+                hintBar.className = 'bg-blue-50/80 px-4 py-1.5 text-[11px] font-bold text-blue-700 border-b border-blue-100/60 flex items-center justify-between';
+                hintBar.innerHTML = '<span><i class="fa-solid fa-palette mr-1"></i>CSS：色・丸み・大きさ・アニメーションなどの見た目を書きます</span><span class="text-slate-400 font-normal">自動反映ON</span>';
+            } else {
+                hintBar.className = 'bg-amber-50/80 px-4 py-1.5 text-[11px] font-bold text-amber-800 border-b border-amber-100/60 flex items-center justify-between';
+                hintBar.innerHTML = '<span><i class="fa-solid fa-bolt mr-1"></i>JS：ボタンを押したときの動きや計算のプログラムを書きます</span><span class="text-slate-400 font-normal">自動反映ON</span>';
+            }
+        }
+
+        function runPreview(manual = false) {
+            const htmlCode = htmlInput.value;
+            const cssCode = cssInput.value;
+            const jsCode = jsInput.value;
+
+            // iframe内に安全にHTML/CSS/JSを結合して描画
+            const combinedDoc = `
+                <!DOCTYPE html>
+                <html lang="ja">
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        * { box-sizing: border-box; }
+                        ${cssCode}
+                    </style>
+                </head>
+                <body>
+                    ${htmlCode}
+                    <script>
+                        try {
+                            ${jsCode}
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `;
+
+            previewFrame.srcdoc = combinedDoc;
+            document.getElementById('preview-status').textContent = 'リアルタイム更新中';
+
+            if (manual) {
+                showToast('コードを実行してプレビューを更新しました！', 'success');
+            }
+        }
+
+        function resetCode() {
+            htmlInput.value = activeBaseCode.html;
+            cssInput.value = activeBaseCode.css;
+            jsInput.value = activeBaseCode.js;
+            runPreview(false);
+            showToast('最初のコードにもどしました', 'info');
+        }
+
+        function copyCurrentCode() {
+            const targetEl = currentEditorTab === 'html' ? htmlInput :
+                             currentEditorTab === 'css' ? cssInput : jsInput;
+            
+            targetEl.select();
+            try {
+                document.execCommand('copy');
+                showToast(`${currentEditorTab.toUpperCase()}のコードをコピーしました！`, 'success');
+            } catch (err) {
+                showToast('コピーに失敗しました', 'error');
+            }
+            window.getSelection().removeAllRanges();
+        }
+
+        // ==========================================
+        // 8. テンプレートギャラリーモーダル
+        // ==========================================
+        function renderTemplates() {
+            const grid = document.getElementById('template-grid');
+            grid.innerHTML = '';
+
+            templates.forEach((tpl, index) => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-50/80 hover:bg-white border border-slate-200/80 rounded-3xl p-5 flex flex-col justify-between transition hover:shadow-soft';
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br ${tpl.color} text-white flex items-center justify-center text-lg shadow-sm">
+                                <i class="fa-solid ${tpl.icon}"></i>
+                            </div>
+                            <span class="text-[11px] font-extrabold px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600">
+                                ${tpl.tag}
+                            </span>
+                        </div>
+                        <h3 class="text-base font-extrabold text-slate-800 mb-1.5">${tpl.title}</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-4">${tpl.desc}</p>
+                    </div>
+                    <button onclick="applyTemplate(${index})" class="w-full py-2.5 px-4 rounded-2xl bg-slate-800 hover:bg-pastel-blue text-white font-bold text-xs flex items-center justify-center gap-2 transition transform active:scale-95">
+                        <i class="fa-solid fa-file-code"></i>
+                        <span>このテンプレートを読み込む</span>
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openTemplateModal() {
+            const modal = document.getElementById('template-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTemplateModal() {
+            const modal = document.getElementById('template-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function applyTemplate(index) {
+            const tpl = templates[index];
+            activeBaseCode = {
+                html: tpl.html,
+                css: tpl.css,
+                js: tpl.js
+            };
+            htmlInput.value = tpl.html;
+            cssInput.value = tpl.css;
+            jsInput.value = tpl.js;
+
+            switchEditorTab('html');
+            runPreview(false);
+            closeTemplateModal();
+            showToast(`「${tpl.title}」を読み込みました！自由に改造しよう！`, 'success');
+        }
+
+        // モーダル外クリックで閉じる
+        document.getElementById('template-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'template-modal') {
+                closeTemplateModal();
+            }
+        });
+
+        // ==========================================
+        // 9. トースト通知機能（alertの代わり）
+        // ==========================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const colors = {
+                success: 'bg-emerald-600 text-white',
+                info: 'bg-slate-800 text-white',
+                error: 'bg-rose-600 text-white'
+            };
+            const icons = {
+                success: 'fa-circle-check',
+                info: 'fa-sparkles',
+                error: 'fa-circle-exclamation'
+            };
+
+            toast.className = `${colors[type]} px-4 py-3 rounded-2xl shadow-lg text-xs font-bold flex items-center gap-2.5 transform transition-all duration-300 translate-y-2 opacity-0`;
+            toast.innerHTML = `<i class="fa-solid ${icons[type]} text-sm"></i><span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 2600);
+        }
+
+        // ==========================================
+        // 10. Firebase 認証 UI ＆ クラウド作品管理
+        // ==========================================
+        function updateAuthHeaderUI(user) {
+            const area = document.getElementById('auth-header-area');
+            if (!user) {
+                area.innerHTML = `
+                    <button onclick="openAuthModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm shadow-sm transition transform active:scale-95">
+                        <i class="fa-solid fa-user-astronaut"></i>
+                        <span>ログイン / 新規登録</span>
+                    </button>
+                `;
+                return;
+            }
+
+            const name = user.isAnonymous
+                ? 'ゲストユーザー'
+                : (user.displayName || (user.email ? user.email.split('@')[0] : 'コーダー'));
+            const badgeText = user.isAnonymous ? 'ゲスト' : 'ログイン中';
+
+            area.innerHTML = `
+                <div class="flex items-center gap-2 bg-slate-100 border border-slate-200/80 pl-3 pr-1.5 py-1.5 rounded-2xl">
+                    <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-pastel-blue to-pastel-mint text-white flex items-center justify-center text-xs font-extrabold shadow-sm">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="text-left leading-tight hidden sm:block">
+                        <div class="text-xs font-extrabold text-slate-800 max-w-[110px] truncate">${escapeHtml(name)}</div>
+                        <div class="text-[10px] font-bold text-emerald-600">${badgeText}</div>
+                    </div>
+                    <button onclick="handleLogout()" title="ログアウト" class="ml-1 px-2.5 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 text-xs font-bold border border-slate-200/60 transition">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[m]));
+        }
+
+        function openAuthModal() {
+            document.getElementById('auth-error-box').classList.add('hidden');
+            const modal = document.getElementById('auth-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function switchAuthMode(mode) {
+            authMode = mode;
+            const loginTab = document.getElementById('auth-tab-login');
+            const signupTab = document.getElementById('auth-tab-signup');
+            const nameField = document.getElementById('auth-name-field');
+            const titleEl = document.getElementById('auth-modal-title');
+            const submitBtn = document.getElementById('auth-submit-btn');
+
+            document.getElementById('auth-error-box').classList.add('hidden');
+
+            if (mode === 'login') {
+                loginTab.className = 'py-2 rounded-xl bg-white text-slate-800 shadow-sm transition';
+                signupTab.className = 'py-2 rounded-xl text-slate-500 hover:text-slate-800 transition';
+                nameField.classList.add('hidden');
+                titleEl.textContent = 'ログイン';
+                submitBtn.textContent = 'ログインする';
+            } else {
+                signupTab.className = 'py-2 rounded-xl bg-white text-slate-800 shadow-sm transition';
+                loginTab.className = 'py-2 rounded-xl text-slate-500 hover:text-slate-800 transition';
+                nameField.classList.remove('hidden');
+                titleEl.textContent = '新規アカウント登録';
+                submitBtn.textContent = 'アカウントを作成する';
+            }
+        }
+
+        function showAuthError(error) {
+            const box = document.getElementById('auth-error-box');
+            const code = error?.code || '';
+            let msg = 'エラーが発生しました。入力内容を確認してください。';
+            if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+                msg = 'メールアドレスまたはパスワードが正しくありません。';
+            } else if (code === 'auth/email-already-in-use') {
+                msg = 'このメールアドレスはすでに登録されています。';
+            } else if (code === 'auth/weak-password') {
+                msg = 'パスワードは6文字以上で入力してください。';
+            } else if (code === 'auth/invalid-email') {
+                msg = '正しいメールアドレスの形式で入力してください。';
+            } else if (code === 'auth/popup-closed-by-user') {
+                msg = 'ログイン画面が閉じられました。';
+            }
+            box.textContent = msg;
+            box.classList.remove('hidden');
+        }
+
+        async function handleEmailAuth(e) {
+            e.preventDefault();
+            if (!auth) return;
+
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+            const displayName = document.getElementById('auth-name').value.trim();
+            const submitBtn = document.getElementById('auth-submit-btn');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = '処理中...';
+
+            try {
+                if (authMode === 'login') {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    showToast('おかえりなさい！ログインしました ✨', 'success');
+                } else {
+                    const cred = await createUserWithEmailAndPassword(auth, email, password);
+                    if (displayName) {
+                        await updateProfile(cred.user, { displayName });
+                        updateAuthHeaderUI(cred.user);
+                    }
+                    showToast('アカウントを作成しました！ようこそ 🎉', 'success');
+                }
+                closeAuthModal();
+                document.getElementById('auth-form').reset();
+            } catch (err) {
+                showAuthError(err);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = authMode === 'login' ? 'ログインする' : 'アカウントを作成する';
+            }
+        }
+
+        async function handleGoogleLogin() {
+            if (!auth) return;
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+                closeAuthModal();
+                showToast('Googleアカウントでログインしました！', 'success');
+            } catch (err) {
+                showAuthError(err);
+            }
+        }
+
+        async function handleGuestLogin() {
+            if (!auth) return;
+            try {
+                await signInAnonymously(auth);
+                closeAuthModal();
+                showToast('ゲストモードでログインしました！', 'success');
+            } catch (err) {
+                showAuthError(err);
+            }
+        }
+
+        async function handleLogout() {
+            if (!auth) return;
+            try {
+                await signOut(auth);
+                showToast('ログアウトしました', 'info');
+            } catch (err) {
+                showToast('ログアウトに失敗しました', 'error');
+            }
+        }
+
+        // --- 作品のクラウド保存・読み込み・削除 ---
+        function openSaveCodeModal() {
+            if (!currentUser) {
+                showToast('作品を保存するにはログインしてください！', 'info');
+                openAuthModal();
+                return;
+            }
+            document.getElementById('save-work-title').value = '';
+            const modal = document.getElementById('save-code-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeSaveCodeModal() {
+            const modal = document.getElementById('save-code-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function saveCurrentWorkToCloud() {
+            if (!db || !currentUser) return;
+            const titleInput = document.getElementById('save-work-title');
+            const title = titleInput.value.trim() || '無題のマイ作品';
+
+            try {
+                const worksCol = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'savedWorks');
+                await addDoc(worksCol, {
+                    title,
+                    html: htmlInput.value,
+                    css: cssInput.value,
+                    js: jsInput.value,
+                    createdAt: Date.now()
+                });
+                closeSaveCodeModal();
+                showToast(`「${title}」をクラウドに保存しました！`, 'success');
+            } catch (err) {
+                console.error('作品保存エラー:', err);
+                showToast('作品の保存に失敗しました', 'error');
+            }
+        }
+
+        function subscribeSavedWorks(uid) {
+            if (!db || !uid) return;
+            if (unsubscribeWorks) unsubscribeWorks();
+
+            const worksCol = collection(db, 'artifacts', appId, 'users', uid, 'savedWorks');
+            unsubscribeWorks = onSnapshot(worksCol, (snapshot) => {
+                const items = [];
+                snapshot.forEach(docSnap => {
+                    items.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                // 新しい順にメモリ上でソート
+                items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                savedWorks = items;
+                renderSavedWorksList();
+            }, (error) => {
+                console.error('作品一覧の取得エラー:', error);
+            });
+        }
+
+        function openSavedWorksModal() {
+            renderSavedWorksList();
+            const modal = document.getElementById('saved-works-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeSavedWorksModal() {
+            const modal = document.getElementById('saved-works-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function renderSavedWorksList() {
+            const listEl = document.getElementById('saved-works-list');
+            if (!listEl) return;
+
+            if (!currentUser) {
+                listEl.innerHTML = `
+                    <div class="text-center py-8 space-y-3">
+                        <div class="w-14 h-14 mx-auto rounded-3xl bg-pastel-blueLight text-pastel-blue flex items-center justify-center text-2xl">
+                            <i class="fa-solid fa-cloud"></i>
+                        </div>
+                        <p class="text-sm font-extrabold text-slate-700">ログインすると作品を保存・管理できます！</p>
+                        <p class="text-xs text-slate-500">作ったWebページやゲームをいつでも呼び出せるようになります。</p>
+                        <button onclick="closeSavedWorksModal(); openAuthModal();" class="px-5 py-2.5 rounded-2xl bg-pastel-blue text-white font-bold text-xs shadow-sm">
+                            ログイン画面をひらく
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            if (savedWorks.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-8 space-y-2">
+                        <p class="text-sm font-extrabold text-slate-700">まだ保存された作品がありません</p>
+                        <p class="text-xs text-slate-500">エディタ右上の「保存」ボタンから自分のコードを残してみよう！</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = '';
+            savedWorks.forEach(work => {
+                const dateStr = work.createdAt
+                    ? new Date(work.createdAt).toLocaleString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    : '';
+                const row = document.createElement('div');
+                row.className = 'bg-slate-50 hover:bg-white border border-slate-200/80 rounded-2xl p-4 flex items-center justify-between gap-3 transition hover:shadow-soft-sm';
+                row.innerHTML = `
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-extrabold text-slate-800 truncate">${escapeHtml(work.title)}</h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5"><i class="fa-regular fa-clock mr-1"></i>保存日時: ${dateStr}</p>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button onclick="loadSavedWork('${work.id}')" class="px-3.5 py-2 rounded-xl bg-pastel-blue hover:bg-blue-500 text-white font-bold text-xs transition">
+                            読み込む
+                        </button>
+                        <button onclick="deleteSavedWork('${work.id}')" title="削除" class="p-2 rounded-xl bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 text-slate-400 text-xs transition">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                listEl.appendChild(row);
+            });
+        }
+
+        function loadSavedWork(workId) {
+            const work = savedWorks.find(w => w.id === workId);
+            if (!work) return;
+            activeBaseCode = { html: work.html || '', css: work.css || '', js: work.js || '' };
+            htmlInput.value = activeBaseCode.html;
+            cssInput.value = activeBaseCode.css;
+            jsInput.value = activeBaseCode.js;
+            switchEditorTab('html');
+            runPreview(false);
+            closeSavedWorksModal();
+            showToast(`「${work.title}」を読み込みました！`, 'success');
+        }
+
+        async function deleteSavedWork(workId) {
+            if (!db || !currentUser) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'savedWorks', workId);
+                await deleteDoc(docRef);
+                showToast('作品を削除しました', 'info');
+            } catch (err) {
+                console.error('削除エラー:', err);
+                showToast('削除に失敗しました', 'error');
+            }
+        }
+
+        // モーダル外クリック対応
+        ['auth-modal', 'save-code-modal', 'saved-works-modal'].forEach(id => {
+            document.getElementById(id)?.addEventListener('click', (e) => {
+                if (e.target.id === id) {
+                    e.currentTarget.classList.add('hidden');
+                    e.currentTarget.classList.remove('flex');
+                }
+            });
+        });
+
+        // HTMLのonclick属性から呼び出せるようにグローバルへ公開（別名エイリアスも含む）
+        Object.assign(window, {
+            filterLessons,
+            renderLessonList,
+            selectLesson,
+            loadLessonCode,
+            nextLesson,
+            toggleLessonComplete,
+            toggleComplete: toggleLessonComplete,
+            switchEditorTab,
+            switchTab: switchEditorTab,
+            runPreview,
+            runCode: runPreview,
+            resetCode,
+            copyCurrentCode,
+            copyCode: copyCurrentCode,
+            openTemplateModal,
+            openTemplatesModal: openTemplateModal,
+            closeTemplateModal,
+            closeTemplatesModal: closeTemplateModal,
+            applyTemplate,
+            loadTemplate: applyTemplate,
+            openAuthModal,
+            closeAuthModal,
+            switchAuthMode,
+            switchAuthTab: switchAuthMode,
+            handleEmailAuth,
+            handleGoogleLogin,
+            handleGoogleAuth: handleGoogleLogin,
+            handleGuestLogin,
+            handleGuestAuth: handleGuestLogin,
+            handleLogout,
+            openSaveCodeModal,
+            openSaveModal: openSaveCodeModal,
+            closeSaveCodeModal,
+            closeSaveModal: closeSaveCodeModal,
+            saveCurrentWorkToCloud,
+            saveProject: saveCurrentWorkToCloud,
+            openSavedWorksModal,
+            openProjectsModal: openSavedWorksModal,
+            closeSavedWorksModal,
+            closeProjectsModal: closeSavedWorksModal,
+            loadSavedWork,
+            loadProject: loadSavedWork,
+            deleteSavedWork,
+            deleteProject: deleteSavedWork
+        });
+    </script>
+</body>
+</html>
